@@ -5,4 +5,16 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[[bin]]
+path = "./src/bin/testgmc.rs"
+name = "testgmc"
+
 [dependencies]
+tokio-serial = { version = "5.4.1", features = [] }
+tokio = { version = "1.34.0", features = ["rt-multi-thread", "macros", "windows-sys", "time", "io-util"] }
+futures = "0.3.29"
+tokio-util = { version = "0.7.10", features = ["codec", "io", "io-util"] }
+tracing = {version = "0.1.40"}
+tracing-subscriber = {version = "0.3.17", features = ["fmt","env-filter"]}
+tracing-log = "0.2.0"
+thiserror = "1.0.50"
