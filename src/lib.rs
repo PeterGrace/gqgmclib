@@ -10,10 +10,11 @@ pub mod int_codec;
 
 use crate::int_codec::IntCodec;
 use futures::{SinkExt, TryStreamExt};
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio_serial::{SerialPortBuilderExt, SerialStream};
 use tokio_util::codec::Decoder;
 use string_codec::StringCodec;
-use crate::consts::{FUNC_GET_CPM, FUNC_GET_VERSION, FUNC_POWERON};
+use crate::consts::{FUNC_GET_CPM, FUNC_GET_SERIAL_NUMBER, FUNC_GET_VERSION, FUNC_POWERON};
 use crate::gqgmcerror::GQGMCError;
 
 pub struct GMC {
@@ -30,6 +31,25 @@ impl GMC {
         };
         Ok(GMC { stream })
     }
+    pub async fn get_serial_number(&mut self) -> Result<String, GQGMCError> {
+        self.stream.write(FUNC_GET_SERIAL_NUMBER.as_ref()).await;
+        let mut buf = [0_u8;7];
+        if let Err(e) = self.stream.read_exact(&mut buf).await {
+            error!("Couldn't read SN: {e}");
+            return Err(GQGMCError::Miscellaneous(e.to_string()));
+        };
+        let mut sn: String = String::default();
+        let hex_lookup = vec!['0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'];
+        buf.into_iter().for_each(|b| {
+            let n1 = (b & 0xF0) >> 4;
+            let n2 = b & 0x0F;
+            sn += &format!("{}{}",
+                           hex_lookup[n1 as usize],
+                           hex_lookup[n2 as usize]);
+        });
+        Ok(sn)
+    }
+
     pub async fn get_version(&mut self) -> Result<String, GQGMCError> {
         let mut frame = StringCodec.framed(&mut self.stream);
         frame.send(FUNC_GET_VERSION.to_string()).await.expect("Couldn't write message");

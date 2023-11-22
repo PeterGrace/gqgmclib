@@ -14,6 +14,7 @@ async fn main() {
 
     let mut gmc = GMC::new("COM3", 57600).unwrap();
     let version = &gmc.get_version().await.unwrap();
+    let serial = &gmc.get_serial_number().await.unwrap();
     let cpm = &gmc.get_cpm().await.unwrap();
-    info!("Device is {version}, CPM is {cpm}");
+    info!("Device is {version}, serial {serial}, CPM is {cpm}");
 }
